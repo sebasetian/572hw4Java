@@ -3,27 +3,55 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.*;
 
 public class ExtractLinks {
 
     public static void main(String[] args) throws Exception {
 
+        String mapPath = "URLtoHTML_mercury.csv";
+        File mapFile = new File(mapPath);
+        Map<String,String> fileUrlMap = new HashMap<>();
+        Map<String,String> urlFileMap = new HashMap<>();
+        PrintWriter writer = new PrintWriter("edgeList.txt");
+        try {
+            Scanner sc = new Scanner(mapFile);
+            while(sc.hasNext()) {
+                String[] pairs = sc.next().split(",");
+                fileUrlMap.put(pairs[0],pairs[1]);
+                urlFileMap.put(pairs[1],pairs[0]);
+            }
 
-        File file = new File("");
-        Document doc = Jsoup.parse(file,"UTF-8","");
-
-        Elements links = doc.select("a[href]");
-        Elements media = doc.select("[src]");
-        Elements imports = doc.select("link[href]");
-        print("\nMedia: (%d)",media.size());
-        for (Element src:media) {
-            if (src.tagName().equals("img")) {
-                print(" * %s: <%s> %sx%s (%s)", src.tagName(),src.attr("abs:src"),src.attr("width"),src.attr("height"),
-                        trim(src.attr("alt"),20));
-            } else
-                print(" * %s: <%s>", src.tagName(),src.attr("abs:src"));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        String filePath = "mercurynews";
+        File files = new File(filePath);
+
+
+        Set<String> edges = new HashSet<>();
+        for(File file: Objects.requireNonNull(files.listFiles())) {
+            Document doc = Jsoup.parse(file,"UTF-8",fileUrlMap.get(file.getName()));
+            Elements links = doc.select("a[href]");
+
+            for (Element link:links) {
+                String url = link.attr("href").trim();
+                if(urlFileMap.containsKey(url)) {
+                    edges.add(file.getName() + " " + urlFileMap.get(url));
+                }
+            }
+        }
+        for (String s:edges) {
+            writer.println(s);
+        }
+        writer.flush();
+        writer.close();
+
+
     }
     private static void print(String msg, Object... args) {
         System.out.println(String.format(msg,args));
