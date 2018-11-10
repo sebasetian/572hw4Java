@@ -34,6 +34,7 @@ public class ExtractLinks {
 
 
         Set<String> edges = new HashSet<>();
+        System.out.println("start calculating");
         for(File file: Objects.requireNonNull(files.listFiles())) {
             Document doc = Jsoup.parse(file,"UTF-8",fileUrlMap.get(file.getName()));
             Elements links = doc.select("a[href]");
@@ -45,12 +46,13 @@ public class ExtractLinks {
                 }
             }
         }
+        System.out.println("start printing");
         for (String s:edges) {
             writer.println(s);
         }
         writer.flush();
         writer.close();
-
+        System.out.println("finished");
 
     }
     private static void print(String msg, Object... args) {
